@@ -9,5 +9,6 @@ __pycache__
 .db
 .models
 .data
+id_rsa
 
 

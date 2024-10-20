@@ -35,8 +35,11 @@ COPY ./id_rsa ./.ssh/id_rsa
 # RUN git clone git@github.com:marlinlm/chatvel.git
 # RUN git clone https://${username}:${password}@github.com/marlinlm/chatvel.git
 RUN git clone https://github.com/marlinlm/chatvel.git
-# RUN pip install -r ./chatvel/requirements.txt
+
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple 
+RUN pip config set install.trusted-host mirrors.aliyun.com
+RUN pip install -r ./chatvel/requirements.txt
 
 # CMD ["/bin/echo", "git clone git@github.com:marlinlm/chatvel.git"]
-# CMD ["git", "pull", "git@github.com:marlinlm/chatvel.git"]
+CMD ["git", "pull", "https://github.com/marlinlm/chatvel.git"]
 CMD ["pip", "install", "-r", "/root/chatvel/requirements.txt"]
