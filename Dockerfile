@@ -5,12 +5,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 # ARG password
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+RUN apt-get update && apt-get install -y software-properties-common git openssh-server 
 
-RUN apt-get update && \
-    apt-get install -y software-properties-common
+WORKDIR /root
+
+COPY ./id_rsa ./.ssh/id_rsa
+COPY ./authorized_keys ./.ssh/authorized_keys
+COPY ./requirements.txt ./requirements.txt
+COPY ./sshd_config /etc/ssh/sshd_config
+RUN chmod 600 .ssh
+RUN echo "\nservice ssh start" >> /root/.bashrc
+
 
 RUN add-apt-repository ppa:deadsnakes/ppa
-
 RUN apt update --fix-missing && \
         apt install python3.11 python3.11-distutils -y && \
         apt install python3-pip -y && \
@@ -24,22 +31,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends build-essent
 
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
-RUN apt-get install git -y
-
-
-WORKDIR /root
-
-
-COPY ./id_rsa ./.ssh/id_rsa
-# SHELL ["/bin/bash", "-c"]
-# RUN git clone git@github.com:marlinlm/chatvel.git
-# RUN git clone https://${username}:${password}@github.com/marlinlm/chatvel.git
-RUN git clone https://github.com/marlinlm/chatvel.git
 
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple 
 RUN pip config set install.trusted-host mirrors.aliyun.com
-RUN pip install -r ./chatvel/requirements.txt
+RUN pip install -r ./requirements.txt
 
-# CMD ["/bin/echo", "git clone git@github.com:marlinlm/chatvel.git"]
-CMD ["git", "pull", "https://github.com/marlinlm/chatvel.git"]
-CMD ["pip", "install", "-r", "/root/chatvel/requirements.txt"]
+EXPOSE 22
+ENTRYPOINT ["/bin/bash"]
