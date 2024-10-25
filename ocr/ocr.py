@@ -446,7 +446,7 @@ class TextDetector(object):
         return dt_boxes, time.time() - st
 
 
-class OCRQAnything(object):
+class ChatvelOCR(object):
     def __init__(self, model_dir=None, device='cpu'):
         self.device = device
         self.text_detector = TextDetector(model_dir, device)

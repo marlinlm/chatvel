@@ -132,8 +132,13 @@ class KnowledgeBaseManager:
                 poi_id  VARCHAR(255) PRIMARY KEY,
                 user_id VARCHAR(255) NOT NULL,
                 kb_id VARCHAR(255) NOT NULL,
+                source VARCHAR(255) NOT NULL,
                 name VARCHAR(512) NOT NULL, 
-                content VARCHAR(2048) NOT NULL
+                lat FLOAT,
+                lon FLOAT,
+                address VARCHAR(255),
+                desc VARCHAR(2048),
+                status VARCHAR(32)
             );
         """
         self.execute_query_(query, (), commit=True)
@@ -432,11 +437,37 @@ class KnowledgeBaseManager:
         query = "INSERT INTO Faqs (faq_id, user_id, kb_id, question, answer, nos_keys) VALUES (?, ?, ?, ?, ?, ?)"
         self.execute_query_(query, (faq_id, user_id, kb_id, question, answer, nos_keys), commit=True)
         
-    def add_poi(self, poi_id, user_id, kb_id, name, content):
-        # debug_logger.info(f"add_faq: {faq_id}, {user_id}, {kb_id}, {question}, {answer}, {nos_keys}")
-        query = "INSERT INTO Pois (poi_id, user_id, kb_id, name, content) VALUES ( ?, ?, ?, ?, ?)"
-        self.execute_query_(query, (poi_id, user_id, kb_id, name, content), commit=True)
+    def insert_poi(self, poi_id, user_id, kb_id, name, lat, lon, address, desc, source, status):
+        query = "INSERT INTO Pois (poi_id, user_id, kb_id, name, lat, lon, address, desc, source, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        self.execute_query_(query, (poi_id, user_id, kb_id, name, lat, lon, address, desc, source, status), commit=True)
 
+    def get_poi_by_id(self, poi_id:str):
+        check_query = "SELECT poi_id, user_id, kb_id, name, lat, lon, address, desc, status FROM Pois WHERE poi_id = ?"
+        return self.execute_query_(check_query, (poi_id,), fetch=True)
+
+    def update_poi(self, poi_id:str, lat:float = None, lon:float = None, address:str = None, desc:str = None, status:str = None):
+        assignments = []
+        if not lat is None: assignments.append({'lat = ?':lat}) 
+        if not lon is None: assignments.append({'lon = ?':lon})
+        if not address is None: assignments.append({'address = ?':address})
+        if not desc is None: assignments.append({'desc = ?':desc})
+        if not status is None: assignments.append({'status = ?':status})
+        
+        if len(assignments) > 0:
+            params = [v for k,v in assignments.items()]
+            params.append(poi_id)
+            query = "UPDATE Pois SET " + ','.join(assignments.keys()) + ' WHERE poi_id = ?'
+            self.execute_query_(query, params, commit=True)
+
+    def update_poi_status(self, poi_id:str, status:str):
+        self.update_poi(poi_id=poi_id, status=status)
+    
+
+
+    def fuzzy_get_poi_by_name(self, name):
+        query = "SELECT * FROM Pois WHERE name like ?"
+        return self.execute_query_(query, (name,), fetch=True)
+    
     #  更新file中的file_size
     def update_file_size(self, file_id, file_size):
         query = "UPDATE File SET file_size = ? WHERE file_id = ?"
@@ -456,7 +487,7 @@ class KnowledgeBaseManager:
         query = "UPDATE File SET chunk_size = ? WHERE file_id = ?"
         self.execute_query_(query, (chunk_size, file_id), commit=True)
 
-    def update_file_status(self, file_id, status, reason):
+    def update_loading_status(self, file_id, status, reason):
         query = "UPDATE File SET status = ?, reason = ? WHERE file_id = ?"
         self.execute_query_(query, (status, reason, file_id), commit=True)
 
@@ -521,6 +552,3 @@ class KnowledgeBaseManager:
             total_deleted += res
         debug_logger.info(f"delete_faqs count: {total_deleted}")
 
-    def fuzzy_get_poi_by_name(self, name):
-        query = "SELECT * FROM Pois WHERE name like ?"
-        return self.execute_query_(query, (name,), fetch=True)

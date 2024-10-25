@@ -125,7 +125,7 @@ async def upload_files(req: request):
         debug_logger.info('cleaned name: %s', file_name)
         file_name = truncate_filename(file_name)
         file_names.append(file_name)
-
+``
     exist_file_names = []
     if mode == 'soft':
         exist_files = local_doc_qa.mysql_client.check_file_exist_by_name(user_id, kb_id, file_names)

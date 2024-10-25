@@ -1,0 +1,4 @@
+```{description}```
+The above text is a description of a place. Please rewrite it with brief language using all 
+information metioned in the text. Do not add anything not metioned in the text. The output 
+should be in simplified Chinese. 

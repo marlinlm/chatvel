@@ -2,11 +2,12 @@ from typing import Callable
 from llm.prompt import prompt_generator
 from config import prompt_template_loader
 from poi.base_poi_extractor import BasePoiExtractor
+from service.service_context import ServiceContext
 from utils.general_utils import num_tokens, get_time, async_run
 import json
 
 
-TEMPLATE_NAME_POI_EXTRACTION = 'poi_extraction'
+TEMPLATE_NAME_POI_EXTRACTION = 'poi_extraction_with_desc'
 def load_poi_extraction_prompt_template():
     return prompt_template_loader.load_prompt_template(TEMPLATE_NAME_POI_EXTRACTION)
 POI_EXTRACTION_PROMPT = load_poi_extraction_prompt_template()
@@ -16,13 +17,14 @@ def generate_poi_extraction_prompt(input:dict):
 
 class LlmPoiExtractor(BasePoiExtractor):
     
-    def __init__(self, poi_retriever:Callable, llm:object, save_poi_extraction = False, poi_extraction_save_dir:str = None):
-        super().__init__(poi_retriever)
-        self.llm: object = llm
+    def __init__(self, context:ServiceContext, poi_retriever:Callable, save_poi_extraction = False, poi_extraction_save_dir:str = None):
+        super().__init__(context, poi_retriever)
+        self._context = context
+        self.llm: object = context.llm
         self.save_poi_extraction = save_poi_extraction
         self.poi_extract_dir = poi_extraction_save_dir
     
-    def extract_poi(self, id:str, text:str, title:str = None, from_image = None, from_video = None):
+    def extract_poi(self, text:str, title:str = None, from_image = None, from_video = None):
         text_in_image = None
         if from_image:
             text_in_image = '\n'.join(['\n'.join([t for t in segment]) for segment in from_image])
@@ -38,15 +40,14 @@ class LlmPoiExtractor(BasePoiExtractor):
             return results
         
         answer = async_run(async_iter())
-        poi_set = []
+        parsed = {}
         if answer and len(answer) > 0:
-            formated = '[' + answer[0].llm_output['answer'][62:-16].replace('POI Name','\"name\"').replace('POI Address Information', '\"address\"').replace('\\n\\n',',').replace('{{\\n','{').replace('\\n}}','}').replace('\\n',',').replace('\\"','"') + ']'
-            print(answer[0].llm_output['answer'])
-            print('========================================')
-            print(formated)
+            formated = answer[0].llm_output['answer'][27:-7].replace('\\n','').replace('\\\"','\"')
+            # print(answer[0].llm_output['answer'])
+            # print('========================================')
+            # print(formated)
             parsed = json.loads(formated)
-            poi_set = set([p['name'] for p in parsed])
-        poi_retrieved = self.retrieve_poi(poi_set)
+        poi_retrieved = self.retrieve_poi(parsed)
                         
-        return poi_set, poi_retrieved
+        return parsed, poi_retrieved
     

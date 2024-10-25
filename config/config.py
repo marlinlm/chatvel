@@ -17,7 +17,7 @@ def get_run_config_params():
 # 模型参数
 llm_config = {
     # 回答的最大token数，一般来说对于国内模型一个中文不到1个token，国外模型一个中文1.5-2个token
-    "max_token": 512,
+    "max_token": 2048,
     # 附带的上下文数目
     "history_len": 2,
     # 总共的token数，如果遇到电脑显存不够的情况可以将此数字改小，如果低于3000仍然无法使用，就更换模型

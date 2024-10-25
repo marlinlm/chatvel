@@ -1,3 +1,4 @@
+from typing import Iterator
 from pyrosm import get_data
 from pyrosm import OSM
 import numpy as np
@@ -56,21 +57,18 @@ def update_china():
     
     return ret
 
-def update_beijing():
-    fp = get_data('beijing',directory='./.data/beijing/in')
+def get_pois(dataset_name:str, data_dir:str) -> Iterator[dict]:
+    fp = get_data(dataset_name, directory=data_dir)
     osm = OSM(fp)
-    # custom_filter = {'amenity': True, "shop": True}
-    # pois = osm.get_pois(custom_filter=custom_filter)
     
     pois = osm.get_pois()
     pois['amenity'] = pois["amenity"].fillna(pois["shop"])
     pois['amenity'] = pois['amenity'].fillna(pois["tourism"])
-    ret = []
     for i in trange(0,len(pois)):
         poi = pois.loc[i]
         meta = {}
         
-        meta['id'] = poi['id']
+        meta['id'] = '_'.join(['OSM', dataset_name, str(poi['id'])])
         meta['lon'] = poi['lon'] if not np.isnan(poi['lon']) else poi['geometry'].centroid.x
         meta['lat'] = poi['lat'] if not np.isnan(poi['lat']) else poi['geometry'].centroid.y
 
@@ -78,18 +76,12 @@ def update_beijing():
         dropped = poi.drop(drop_col)
         dropped = dropped.dropna()
         
-        doc_id = []
-        content = []
+        alias = []
         if 'name' in dropped:
-            doc_id.append(poi['name'])
-            content.append(poi['name'])
+            alias.append(poi['name'])
         if 'amenity' in dropped:
-            doc_id.append(poi['amenity'])
             meta['amenity'] = poi['amenity']
 
-        doc_id.append(str(poi['id']))
-        meta['doc_id'] = str.join('_', doc_id)
-            
         if 'tags' in dropped:
             tags = dropped['tags']
             tags = json.loads(tags)
@@ -98,33 +90,28 @@ def update_beijing():
             meta['tags'] = tags
             
             if 'name' in tags:
-                content.append(tags['name'])
+                alias.append(tags['name'])
             if 'name:zh' in tags:
-                content.append(tags['name:zh'])
+                alias.append(tags['name:zh'])
             if 'name:zh-Hans' in tags:
-                content.append(tags['name:zh-Hans'])
+                alias.append(tags['name:zh-Hans'])
             if 'alt_name:zh' in tags:
-                content.append(tags['alt_name:zh'])
+                alias.append(tags['alt_name:zh'])
             if 'alt_name' in tags:
-                content.append(tags['alt_name'])
+                alias.append(tags['alt_name'])
             if 'alt_name:zh-Hans' in tags:
-                content.append(tags['alt_name:zh-Hans'])
+                alias.append(tags['alt_name:zh-Hans'])
             if 'name:en' in tags:
-                content.append(tags['name:en'])
-            if len(content) == 0:
-                content.append(poi['amenity'])
+                alias.append(tags['name:en'])
+        
+        if len(alias) == 0:
+            alias.append(poi['amenity'])
             
-            meta['name'] = content[0]
+        meta['alias'] = alias
+        meta['name'] = alias[0]
 
-        ret.append({'content':str.join(';',set(content)), 'meta':meta})
+        yield meta
     
-    return ret
         
-                
-        
-if __name__ == '__main__':
-    list = update_beijing()
-    for l in list:
-        print(l)    
     
     
