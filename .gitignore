@@ -10,5 +10,4 @@ __pycache__
 .models
 .data
 id_rsa
-.log
-
+.logs

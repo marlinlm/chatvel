@@ -447,16 +447,16 @@ class KnowledgeBaseManager:
 
     def update_poi(self, poi_id:str, lat:float = None, lon:float = None, address:str = None, desc:str = None, status:str = None):
         assignments = []
-        if not lat is None: assignments.append({'lat = ?':lat}) 
-        if not lon is None: assignments.append({'lon = ?':lon})
-        if not address is None: assignments.append({'address = ?':address})
-        if not desc is None: assignments.append({'desc = ?':desc})
-        if not status is None: assignments.append({'status = ?':status})
+        if not lat is None: assignments.append(('lat = ?',lat)) 
+        if not lon is None: assignments.append(('lon = ?',lon))
+        if not address is None: assignments.append(('address = ?',address))
+        if not desc is None: assignments.append(('desc = ?',desc))
+        if not status is None: assignments.append(('status = ?',status))
         
         if len(assignments) > 0:
-            params = [v for k,v in assignments.items()]
-            params.append(poi_id)
-            query = "UPDATE Pois SET " + ','.join(assignments.keys()) + ' WHERE poi_id = ?'
+            params = [v for k,v in assignments] + [poi_id]
+            assignments = [k for k,v in assignments]
+            query = "UPDATE Pois SET " + ','.join(assignments) + ' WHERE poi_id = ?'
             self.execute_query_(query, params, commit=True)
 
     def update_poi_status(self, poi_id:str, status:str):
