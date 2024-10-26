@@ -107,8 +107,8 @@ def get_pois(dataset_name:str, data_dir:str) -> Iterator[dict]:
         if len(alias) == 0:
             alias.append(poi['amenity'])
             
-        meta['alias'] = alias
         meta['name'] = alias[0]
+        meta['alias'] = set(alias)
 
         yield meta
     

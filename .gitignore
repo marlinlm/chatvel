@@ -6,8 +6,4 @@
 user.config
 venv
 __pycache__
-.db
-.models
-.data
-id_rsa
-.logs
+.*

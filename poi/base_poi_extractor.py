@@ -16,7 +16,7 @@ class BasePoiExtractor:
             if 'address' in pois[name] and pois[name]['address'] != 'null':
                 addr = pois[name]['address']
             searched_pois = self._poi_retriever(name, addr, sources=self._context.config.poi_retrieve_sources)
-            if searched_pois and len(searched_pois) > 0 and searched_pois[0].metadata['score'] < 0.3:
+            if searched_pois and len(searched_pois) > 0 and searched_pois[0].metadata['_score'] < 0.3:
                 # poi_retrieved[my_poi_key] = [searched_pois[0].page_content, str(searched_pois[0].metadata['id']), str(searched_pois[0].metadata['_score'])]
                 poi_retrieved[my_poi_key]  = searched_pois[0]
         return poi_retrieved    

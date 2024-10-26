@@ -83,11 +83,12 @@ class POIService:
         if query_result is None or len(query_result) == 0:
             return None
         
+        poi_raw = query_result[0]
+        
         poi_status = poi_raw[8]
         if poi_status != POI_STATUS_NORMAL:
             return None
         
-        poi_raw = query_result[0]
         poi['id'] = poi_raw[0]
         poi['name'] = poi_raw[3]
         poi['lat'] = poi_raw[4]
@@ -100,10 +101,10 @@ class POIService:
         self.lock_poi(poi_id = poi_id)
         
         # delete old poi description in vector store
-        self.delete_poi_desc(self, poi_id)
+        self.delete_poi_desc(poi_id = poi_id)
         
         # insert new poi desc in vector store
-        self.insert_poi_desc(poi_id, poi_name, desc, source)
+        self.insert_poi_desc(poi_id = poi_id, poi_name = poi_name, desc = desc, source = source)
         
         # update poi entry in mysql
         self._context.mysql_client.update_poi(poi_id=poi_id, desc=desc)

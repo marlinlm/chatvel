@@ -1,8 +1,10 @@
-
+import os
 from os.path import dirname
 import sys
+
 sys.path.append(dirname(dirname(__file__)))
-from config.dataset_config import POI_DATASET_DIR_OSM_BEIJING, POI_DATASET_NAME_OSM_BEIJING
+from loader.xhs_loader import XhsLoader
+from config.dataset_config import POI_DATASET_DIR_OSM_BEIJING, POI_DATASET_NAME_OSM_BEIJING, XHS_DATASET_DIR
 from poi.poi_loader import OSMPoiDatasetLoader
 from service.data_load_service import DataLoadService
 from service.service_context import ServiceContext
@@ -35,34 +37,24 @@ from arguments import parse_arg
 #                 url=link,
 #                 headers=XHS_HEADERS)
 
-
+def get_xhs_files(file_dir:str):
+    loaders = []
+    for file_name in os.listdir(file_dir):
+        if file_name.endswith('.xhs'):
+            path = os.path.join(XHS_DATASET_DIR, file_name)
+            xhs_loader = XhsLoader(context = context, file_path=path)
+            loaders.append(xhs_loader)
+    return loaders
 
 if __name__ == "__main__":
     args = parse_arg()
     context = ServiceContext()
     context.init_cfg(args)
+    loader_service = DataLoadService(context = context)
 
     poi_loader = OSMPoiDatasetLoader(context = context,
                                      data_name = POI_DATASET_NAME_OSM_BEIJING,
                                      data_dir = POI_DATASET_DIR_OSM_BEIJING,
                                      )
-    loader_service = DataLoadService(context = context)
     loader_service.load_data([poi_loader])
-    
-
-    # dir_in = os.path.join(dirname(dirname(__file__)),'.data','beijing')
-    # claw_xhs(local_doc_qa, dir_in)
-
-    
-    # upload_link(local_doc_qa, 'https://www.xiaohongshu.com/explore/6673c834000000001d016bad')
-    
-    # upload_weblink(user_id=user_id,
-    #                kb_id=kb_id,
-    #                local_doc_qa=local_doc_qa,
-    #                url="https://www.xiaohongshu.com/explore/66f6d084000000002a034b91",
-    #                headers={'cookie':'web_session=040069b3fca2d9d40d070584c2344b819836aa;', 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'})
-    # print(list_docs(user_id=user_id, kb_id=kb_id, local_doc_qa=local_doc_qa))
-    # print(search(local_doc_qa=local_doc_qa, kb_ids=['beijing_poi'], query='北京大学'))
-    # for answer in qa(local_doc_qa=local_doc_qa, query='南沙', kb_ids=['1']):
-    #     print(answer.llm_output["answer"])
-    # update_beijing_poi(local_doc_qa)
+    # loader_service.load_data(get_xhs_files(file_dir = XHS_DATASET_DIR))

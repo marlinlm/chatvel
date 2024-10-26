@@ -31,8 +31,15 @@ class DataLoader(BaseLoader):
         return docs
     
     def lazy_load(self) -> Iterator[Document]:
-        for loader in self.on_load_data():
-            for doc in loader.load_and_split():
+        savers = self.on_load_data()
+        if savers is None:
+            return
+        
+        for saver in savers:
+            docs = saver.load_and_split()
+            if docs is None:
+                continue
+            for doc in docs:
                 yield doc
 
     def on_load_data(self) -> Iterator[DataSaver]:
@@ -54,8 +61,15 @@ class DatasetLoader(BaseLoader):
         raise Exception(f"{self.__class__.__name__} does not implement load_data()")
     
     def lazy_load(self) -> Iterator[Document]:
-        for loader in self.load_data():
-            for doc in loader.load_and_split():
+        loaders = self.load_data()
+        if loaders is None:
+            return
+        
+        for loader in loaders:
+            docs = loader.load_and_split()
+            if docs is None:
+                continue
+            for doc in docs:
                 yield doc
 
 class ChatvelDataSaver(DataSaver):
@@ -67,7 +81,10 @@ class ChatvelDataSaver(DataSaver):
         self._data = data
         
     def lazy_load(self) -> Iterator[Document]:
-        for doc in self._handler(self._data):
+        docs = self._handler(self._data)
+        if docs is None:
+            return
+        for doc in docs:
             yield doc
 
 class ChatvelDataLoader(DataLoader):
@@ -97,7 +114,10 @@ class ChatvelLoader(DatasetLoader):
         raise Exception(f"{self.__class__.__name__} does not implement data_handlers()")
     
     def load_data(self) -> Iterator[ChatvelDataLoader]:
-        for data in self.on_load_dataset():
+        data_set = self.on_load_dataset()
+        if data_set is None:
+            return
+        for data in data_set:
             yield ChatvelDataLoader(
                         data = data,
                         handlers = self.data_handlers()
