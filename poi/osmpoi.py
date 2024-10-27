@@ -82,13 +82,14 @@ def get_pois(dataset_name:str, data_dir:str) -> Iterator[dict]:
         if 'amenity' in dropped:
             meta['amenity'] = poi['amenity']
 
+        tags = {}
         if 'tags' in dropped:
             tags = dropped['tags']
             tags = json.loads(tags)
             dropped['tags'] = tags
             
             meta['tags'] = tags
-            
+                
             if 'name' in tags:
                 alias.append(tags['name'])
             if 'name:zh' in tags:
@@ -98,7 +99,7 @@ def get_pois(dataset_name:str, data_dir:str) -> Iterator[dict]:
             if 'alt_name:zh' in tags:
                 alias.append(tags['alt_name:zh'])
             if 'alt_name' in tags:
-                alias.append(tags['alt_name'])
+                alias.extend(tags['alt_name'].split(';'))
             if 'alt_name:zh-Hans' in tags:
                 alias.append(tags['alt_name:zh-Hans'])
             if 'name:en' in tags:
@@ -111,7 +112,3 @@ def get_pois(dataset_name:str, data_dir:str) -> Iterator[dict]:
         meta['alias'] = set(alias)
 
         yield meta
-    
-        
-    
-    
