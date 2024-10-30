@@ -61,27 +61,25 @@ class ServiceContext:
             if args.use_openai_api:
                 self.llm: OpenAILLM = OpenAILLM(args)
             else:
-                # from llm.llm_for_llamacpp import LlamaCPPCustomLLM
-                # self.llm: LlamaCPPCustomLLM = LlamaCPPCustomLLM(args)
                 from llm.llm_for_fastchat import OpenAICustomLLM
                 self.llm: OpenAICustomLLM = OpenAICustomLLM(args)
-            from rerank.rerank_onnx_backend import RerankOnnxBackend
-            # from embedding.embedding_onnx_backend import EmbeddingOnnxBackend
-            from embedding.embedding_torch_backend import EmbeddingTorchBackend
-            self.local_rerank_backend: RerankOnnxBackend = RerankOnnxBackend(self.use_cpu)
-            # self.embeddings: EmbeddingOnnxBackend = EmbeddingOnnxBackend(self.use_cpu)
-            self.embeddings: EmbeddingTorchBackend = EmbeddingTorchBackend(self.use_cpu)
-        else:
-            if args.use_openai_api:
-                self.llm: OpenAILLM = OpenAILLM(args)
-            else:
-                from llm.llm_for_llamacpp import LlamaCPPCustomLLM
-                self.llm: LlamaCPPCustomLLM = LlamaCPPCustomLLM(args)
-            from rerank.rerank_torch_backend import RerankTorchBackend
-            from embedding.embedding_torch_backend import EmbeddingTorchBackend
-            self.local_rerank_backend: RerankTorchBackend = RerankTorchBackend(self.use_cpu)
-            self.embeddings: EmbeddingTorchBackend = EmbeddingTorchBackend(self.use_cpu)
+        #     from rerank.rerank_onnx_backend import RerankOnnxBackend
+        #     # from embedding.embedding_onnx_backend import EmbeddingOnnxBackend
+        #     from embedding.embedding_torch_backend import EmbeddingTorchBackend
+        #     self.local_rerank_backend: RerankOnnxBackend = RerankOnnxBackend(self.use_cpu)
+        #     # self.embeddings: EmbeddingOnnxBackend = EmbeddingOnnxBackend(self.use_cpu)
+        #     self.embeddings: EmbeddingTorchBackend = EmbeddingTorchBackend(self.use_cpu)
+        # else:
+        #     if args.use_openai_api:
+        #         self.llm: OpenAILLM = OpenAILLM(args)
+        #     else:
+        #         from llm.llm_for_llamacpp import LlamaCPPCustomLLM
+        #         self.llm: LlamaCPPCustomLLM = LlamaCPPCustomLLM(args)
+        #     from rerank.rerank_torch_backend import RerankTorchBackend
+        #     from embedding.embedding_torch_backend import EmbeddingTorchBackend
+        #     self.local_rerank_backend: RerankTorchBackend = RerankTorchBackend(self.use_cpu)
+        #     self.embeddings: EmbeddingTorchBackend = EmbeddingTorchBackend(self.use_cpu)
             
-        self.mysql_client = KnowledgeBaseManager()
-        self.faiss_client = FaissClient(self.mysql_client, self.embeddings)
-        self.ocr_engine = ChatvelOCR(model_dir=OCR_MODEL_PATH, device="cpu")
+        # self.mysql_client = KnowledgeBaseManager()
+        # self.faiss_client = FaissClient(self.mysql_client, self.embeddings)
+        # self.ocr_engine = ChatvelOCR(model_dir=OCR_MODEL_PATH, device="cpu")

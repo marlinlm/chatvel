@@ -1,0 +1,67 @@
+ Based on the above chat history, please help me summarize the user's travel request, and break down the user's travel request into multiple independent requirements, each including both positive and negative
+ requirements. Return the results in the following format directly based on the **Chat History** given, without writing any code.
+ ### Output Format:
+ Return a list, where each item is a dictionary representing an independent requirement, with the following key-value pairs:- **pos**: The positive requirement, representing what the user wants, excluding any negative requirements.- **neg**: The negative requirement, generally what the user does not want, dislikes, or refuses. All negative
+ requirements must be captured in this field, for example, "non-spicy" should extract "spicy", "don't want crowded places"
+ should extract "crowded", "hate noisy" should extract "noisy".- **mustsee**: Indicates whether this requirement represents a specific place name. If so, this field is `true`,
+ otherwise, it is `false`.- **type**: Indicates whether the requirement is for a "place" or an "itinerary", with place having sub-types "place",
+ "starting point", and "ending point". Overall, this field can have the values "place", "starting point", "ending point",
+ or "itinerary".- Your return should be a list in the following format:
+ [
+ {{
+ "pos": "positive requirement", (excluding negative requirements)
+ "neg": "negative requirement" (what's not wanted, disliked, refused, not wanting to go or see, any negated
+ requirement),
+ "mustsee": true (whether it's a must-see point, all specific places should be set to true),
+ "type": "place"
+ }},
+ ...
+ ]- The **positive requirement** must not be empty, and it must not include any negative requirements. All negative
+ requirements should be summarized in the value of the "neg" field.- Set to null in cases where there are no **negative requirements** for a specific place.- Sometimes users only describe what they do not want (negative requirements), in such cases, you should summarize a
+ **positive requirement** based on the **negative requirement**. For example, if a user says 'don't want spicy food', the
+ output should include: "pos" corresponding to "food", "neg" corresponding to "spicy".- Independent requirements must have specific descriptions or demands to be considered a requirement, for example,
+ "recommend a route" does not count as an independent requirement.- "mustsee" must be a specific place name, not a general term.- If a place is definitively a "starting point" or "ending point", then the value of the "type" field should be "starting
+ point" or "ending point", respectively. "Starting points" and "ending points" are must-see points, with the "mustsee"
+ field set to true.- A place can only be considered as a "starting point" or "ending point" if it is a specific attraction or location, and
+ there can only be at most one "starting point" and one "ending point".- The return should not include any other content.
+ ### Example Outputs:
+ Example 1:
+ Chat History: 
+ [{"role": "user", "content": "I want to start by visiting Sinan Mansions, then find something fun to do nearby."},
+ {"role": "user", "content": "I don't want it to be crowded"}]
+ Output:
+ [
+ {{
+ "pos": "Sinan Mansions",
+ "neg": null,
+ "mustsee": true,
+ "type": "starting point"
+ }},
+ {{
+ "pos": "fun places near Sinan Mansions",
+ "neg": "crowded",
+ "mustsee": false,
+ "type": "place"
+ }}
+ ]
+ ### mustsee Field Assignment Examples
+ "mustsee" true for specific place names: "Hualian Supermarket", "Old Mac Coffee Shop", "Wukang Mansion", "Nanluoguxiang",
+ ...
+ "mustsee" false for general place names: "supermarket", "milk tea shop", "bar", "coffee", ...
+ ### Output Guidelines- Return a list, each item in the list is a dictionary containing "pos", "neg", "mustsee", and "type" key-value pairs.- Return as a JSON List.- The list can be empty; if empty, just return a JSON list.- The output should not include any other information, ensuring it can be parsed by json.loads.
+
+ ### Task Overview
+ Your task is to analyze and break down the **Chat History** into independent requirements and return them.
+ 1. First, separate the different independent requirements, breaking down each into positive and negative requirements.
+ 2. Positive requirements should only include what the user wants, and negative requirements should only include what the
+ user does not want.
+ 3. For each independent requirement, refer to **mustsee field assignment examples** to assign a value to the "mustsee"
+ field, analyzing whether the **positive requirement** is a specific place name. If so, set "mustsee" to true, otherwise
+ set it to false.
+ 4. Refer to the **examples** and **output format** to complete the other fields.
+ #### Notes:- Do not include duplicate independent requirements; ensure each independent requirement corresponds to different key
+ points in the user's needs.- "Itinerary" requirements should be for the whole itinerary, such as including several places, approximate time, etc.,
+ all others are place requirements.- The "type" field can only be one of ["place", "itinerary", "starting point", "ending point"].- All attractions must be completely separated, such as "Nanluoguxiang and Drum Tower" must be split into "Nanluoguxiang"
+ and "Drum Tower" as two requirements.
+ Now, based on the **Chat History**, refer to the **example outputs**, and return in Simplified Chinese according to the **output guidelines**
+ and **output format**.

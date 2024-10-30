@@ -141,14 +141,15 @@ class OpenAILLM(BaseAnswer, ABC):
     async def _call(self, prompt: str, history: List[List[str]], streaming: bool=False) -> str:
         messages = []
         for pair in history:
-            question, answer = pair
+            question = pair[0]
             messages.append({"role": "user", "content": question})
-            messages.append({"role": "assistant", "content": answer})
-        messages.append({"role": "user", "content": prompt})
+            if len(pair) == 2:
+                answer = pair[1]
+                messages.append({"role": "assistant", "content": answer})
+        messages.append({"role": "system", "content": prompt})
         debug_logger.info(messages)
 
         try:
-
             if streaming:
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -202,6 +203,7 @@ class OpenAILLM(BaseAnswer, ABC):
 
         if history is None or len(history) == 0:
             history = [[]]
+            
         debug_logger.info(f"history_len: {self.history_len}")
         debug_logger.info(f"prompt: {prompt}")
         debug_logger.info(f"prompt tokens: {self.num_tokens_from_messages([{'content': prompt}])}")

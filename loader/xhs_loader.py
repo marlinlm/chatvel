@@ -1,6 +1,5 @@
 import logging
-from typing import Iterator, List, Optional, Set, Callable
-from urllib.parse import urljoin, urldefrag
+from typing import Iterator, List, Callable
 from os.path import dirname
 import uuid
 import requests
@@ -18,7 +17,7 @@ import os
 import base64
 
 from config import prompt_template_loader
-from config.dataset_config import POI_SOURCE_OSM, POI_SOURCE_XHS
+from config.dataset_config import POI_SOURCE_XHS
 from llm.prompt import prompt_generator
 from loader.chatvel_loader import ChatvelLoader
 from poi.poi_service import POIService
@@ -122,7 +121,7 @@ class XhsLoader(ChatvelLoader):
                 f.write('\n\n')
                 f.write(str(poi_retrieved))
                 
-            self.post_process(note)
+            self.save_desc(note)
             
 
     def recognize_images(self, note_id, images:list[str]):
@@ -193,7 +192,7 @@ class XhsLoader(ChatvelLoader):
                 
         return meta
 
-    def post_process(self, note) -> Iterator[Document]:
+    def save_desc(self, note) -> Iterator[Document]:
         pois = note['pois'] 
         retrieved_pois = note['retrieved_pois']
         
@@ -220,6 +219,7 @@ class XhsLoader(ChatvelLoader):
                     # add alias name for the retrieved poi
                     self._poi_service.insert_poi_names(alias=[poi_name], poi_id = poi_id, poi_name=poi['name'], source=poi_source)
             else:
+            
                 # create xhs poi entity
                 xhs_poi = {
                     'name': poi_name,

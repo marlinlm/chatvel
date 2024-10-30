@@ -1,0 +1,67 @@
+ ### Query
+ {query}
+
+ ### Task
+ In the context of the given chat history and **Query**, please summarize the user's travel request, and break down the user's travel request into multiple independent requirements. Collect and return the independent requirements that strictly match the definitions of the **requirement types**. Each independent requirements including either positive or negative
+ requirements. Return the results in the following format directly based on the **Chat History** and **Query** given, without writing any code.
+ ### Output Format:
+ Return a list, where each item is a dictionary representing an independent requirement, with the following key-value pairs:
+ - **requirement**: To capture the positive or negative user requirement. The positive requirement describes what the user wants or how the travel will be.
+ The negative requirement captures what the user does not want, dislike, or refues. 
+ Do not add any requirement that is not metioned in the chat history or the **Query**.
+ Do not infer requirement from the **chat history** or the **Query**. Only extract requirement in the context of the **chat history** and **Query**.
+ Only populate the requirements that strictly match the definition of **requirement types**. 
+ Do NOT return any requirements that does not match the **requirement type** strictly.
+ - **pos_or_neg**: Indicates whether the requirment is a positive or negative requirement. If the requirement is positive, fill `pos`. If it is a negative requirement, this fild is `neg`. 
+ - **type**: Indicates whether the requirement is for {_requirement_types}.
+ Overall, this field can have the values {_requirement_types}.
+ - Your return should be a list in the following format:
+ [
+ {{
+ "requirement": "positive requirement", (excluding negative requirements),
+ "pos_or_neg": "pos",
+ "type": "attraction"
+ }},
+  {{
+ "requirement": "negative requirement" (what's not wanted, disliked, refused, not wanting to go or see, any negated requirement),
+ "pos_or_neg": "neg",
+ "type": "accomodation"
+ }},
+ ...
+ ]
+ - There must be at least 1 positive requirement, and it must not include any negative requirements. 
+ - All negative requirements should be summarized to requirements with **pos_or_neg** set to `neg`. There could be no negative requirements.
+ - Independent requirements must have specific descriptions or demands to be considered a requirement, for example, "recommend a route" does not count as an independent requirement.
+
+
+ ### Requirement Types
+ - The **requirements types** are defined below:
+ {_requirement_desc}
+ - Only populate the requirements that strictly match the definition of **requirement types**. 
+ - Do NOT return any requirements that does not match the **requirement type** strictly.
+
+ ### Output Guidelines
+ - Return a list, each item in the list is a dictionary containing "requirement", "pos_or_neg", and "type" key-value pairs.
+ - Return as a JSON List.- The list can be empty; if empty, just return a JSON list.
+ - The output should not include any other information, ensuring it can be parsed by json.loads.
+ - Do not generate other requirement types other than metioned in the above list.
+
+
+ ### Task Overview
+ Your task is to analyze and break down the **Chat History** into independent requirements and return them.
+ 1. First, separate the different independent requirements, breaking down each into requirement types and decide whether the requirement is positive or negative.
+ 2. Validate whether the requirement is mentioned in the chat history. Only those explicitly metioned requirements should be returned.
+ 3. Positive requirements should only include what the user wants, and negative requirements should only include what the
+ user does not want.
+ 4. Refer to the **examples** and **output format** to complete the other fields.
+
+ #### Notes:
+ - Do not include duplicate independent requirements; ensure each independent requirement corresponds to different key
+ points in the user's needs.
+ - "Itinerary" requirements should be for the whole itinerary, such as including travel type, several places, approximate time, holidays and events etc., all others are place requirements.
+ - The "type" field can only be one of [{_requirement_types}].
+ - Do not miss any type of requirements if that type of information is metioned in the chat history.
+ - Do not add any requirement that is not metioned in the chat history.
+ - All attractions must be completely separated, such as "Nanluoguxiang and Drum Tower" must be split into "Nanluoguxiang" and "Drum Tower" as two requirements.
+ Now, based on the **Chat History**, refer to the **example outputs**, and return in Simplified Chinese according to the **output guidelines**
+ and **output format**.

@@ -8,9 +8,9 @@ from config.dataset_config import POI_DATASET_DIR_OSM_BEIJING, POI_DATASET_NAME_
 from poi.poi_loader import OSMPoiDatasetLoader
 from service.data_load_service import DataLoadService
 from service.service_context import ServiceContext
-from utils.logger import debug_logger
-from datetime import datetime
 from arguments import parse_arg
+
+from query.query_decompose import QueryDecomposer
 
 # def upload_weblink(user_id, kb_id, local_doc_qa:LocalDocQA, url, headers):
 #     debug_logger.info("upload_weblink %s", url)
@@ -50,11 +50,22 @@ if __name__ == "__main__":
     args = parse_arg()
     context = ServiceContext()
     context.init_cfg(args)
-    loader_service = DataLoadService(context = context)
+    
+    qd = QueryDecomposer(llm = context.llm)
+    query = '明天去海淀，国庆节找个老师补习一下'
+    requirements,slots = qd.decompose_query(query)
+    print('//////////////////////////////////')
+    print(str(requirements))
+    print(str(slots))
+    
+    
+    
+    
+    # loader_service = DataLoadService(context = context)
 
-    poi_loader = OSMPoiDatasetLoader(context = context,
-                                     data_name = POI_DATASET_NAME_OSM_BEIJING,
-                                     data_dir = POI_DATASET_DIR_OSM_BEIJING,
-                                     )
-    loader_service.load_data([poi_loader])
+    # poi_loader = OSMPoiDatasetLoader(context = context,
+    #                                  data_name = POI_DATASET_NAME_OSM_BEIJING,
+    #                                  data_dir = POI_DATASET_DIR_OSM_BEIJING,
+    #                                  )
+    # loader_service.load_data([poi_loader])
     # loader_service.load_data(get_xhs_files(file_dir = XHS_DATASET_DIR))

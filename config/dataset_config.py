@@ -22,4 +22,4 @@ class DatasetConfig:
         self.kb_id_poi_desc = KB_ID_POI_DESC
         self.kb_name_poi_desc = KB_NAME_POI_DESC
         self.xhs_claw_header = XHS_HEADERS
-        self.poi_retrieve_sources = [POI_SOURCE_OSM]
+        self.poi_retrieve_sources = [POI_SOURCE_OSM, POI_SOURCE_XHS]

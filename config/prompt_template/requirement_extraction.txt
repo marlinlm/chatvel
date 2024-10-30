@@ -1,0 +1,28 @@
+## Today date
+```{today_date}```
+
+## Query
+```{query}```
+
+## Requirement
+```{requirement}```
+
+## Task
+In the context of the **Chat History**, **Query** and **Requirement** given, please do the following task step by step:
+1. Determine whether the content of the **Requirement** is metioned in the **Chat History** or **Query**.
+2. Following **Value extraction**, extract value from the **Requirement** and return in the correct format .
+
+## Value extraction
+- **{requirement_type}** : {requirement_desc}
+- The value of **{requirement_type}** should be out put as {requirement_output_format}.
+
+### Output Format:
+ Return a dictionary representing an the extracted value, with the following key-value pairs:
+ - **explicitly metioned in the query or chat history**: Indicates whether the content of **Requirement** is explicitly metioned in the **Chat History** or in the **Query**. It could be one of `true` or `false`.
+ - **extracted value**: the value extracted from the **Requirement** following the format described in **Value extraction**.
+ - Ensure the output can be parsed by json.loads.
+Your output should be a json object in the following format:
+{{
+    "explicitly metioned in the query or chat history":True,
+    "extracted value": "The value extracted in the format described in **Value extraction**"
+}}
