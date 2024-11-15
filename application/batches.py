@@ -51,17 +51,17 @@ if __name__ == "__main__":
     context = ServiceContext()
     context.init_cfg(args)
     
-    qd = QueryDecomposer(llm = context.llm)
-    query = '明天去海淀，国庆节找个老师补习一下'
-    requirements,slots = qd.decompose_query(query)
-    print('//////////////////////////////////')
-    print(str(requirements))
-    print(str(slots))
+    # qd = QueryDecomposer(llm = context.llm)
+    # query = '明天去海淀，国庆节找个老师补习一下'
+    # requirements,slots = qd.decompose_query(query)
+    # print('//////////////////////////////////')
+    # print(str(requirements))
+    # print(str(slots))
     
     
     
     
-    # loader_service = DataLoadService(context = context)
+    loader_service = DataLoadService(context = context)
 
     # poi_loader = OSMPoiDatasetLoader(context = context,
     #                                  data_name = POI_DATASET_NAME_OSM_BEIJING,

@@ -19,7 +19,7 @@ class EmbeddingTorchBackend(EmbeddingBackend):
         # else:
         #     self.device = torch.device('mps')
         #     self._model = self._model.to(self.device)
-        self.device = torch.device('cpu')
+        self.device = torch.device('cuda')
         self._model = self._model.to(self.device)
         print("embedding device:", self.device)
 
