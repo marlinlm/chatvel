@@ -60,7 +60,7 @@ if __name__ == "__main__":
     
     
     
-    loader_service = DataLoadService(context = context)
+    # loader_service = DataLoadService(context = context)
 
     # poi_loader = OSMPoiDatasetLoader(context = context,
     #                                  data_name = POI_DATASET_NAME_OSM_BEIJING,
