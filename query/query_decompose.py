@@ -6,17 +6,21 @@ import datetime
 from config import prompt_template_loader
 from llm.prompt import prompt_generator
 from utils.general_utils import async_run
+from utils.logger import debug_logger
 
 TEMPLATE_NAME_QUERY_DECO = 'query_decompose'
 def load_query_decompose_prompt_template():
     return prompt_template_loader.load_prompt_template(TEMPLATE_NAME_QUERY_DECO)
 QUERY_DECOMPOSE_PROMPT = load_query_decompose_prompt_template()
 
-TEMPLATE_NAME_REQ_EXTR = 'requirement_extraction'
-def load_requirement_extraction_prompt_template():
-    return prompt_template_loader.load_prompt_template(TEMPLATE_NAME_REQ_EXTR)
-REQUIREMENT_EXTRACTION_PROMPT = load_requirement_extraction_prompt_template()
-
+TEMPLATE_NAME_REQ_EXTR_POS = 'requirement_extraction_pos'
+def load_requirement_extraction_prompt_template_pos():
+    return prompt_template_loader.load_prompt_template(TEMPLATE_NAME_REQ_EXTR_POS)
+REQUIREMENT_EXTRACTION_PROMPT_POS = load_requirement_extraction_prompt_template_pos()
+TEMPLATE_NAME_REQ_EXTR_NEG = 'requirement_extraction_neg'
+def load_requirement_extraction_prompt_template_neg():
+    return prompt_template_loader.load_prompt_template(TEMPLATE_NAME_REQ_EXTR_NEG)
+REQUIREMENT_EXTRACTION_PROMPT_NEG = load_requirement_extraction_prompt_template_neg()
     
 async def run_llm(llm, prompt:str, history:List[List[str]] = None):
     results = []
@@ -26,7 +30,7 @@ async def run_llm(llm, prompt:str, history:List[List[str]] = None):
         results.append((answer_result))
     return results
 
-def generate_requirement_extraction_prompt(slot, requirement, query):
+def generate_requirement_extraction_prompt(slot, requirement, is_positive, query):
     requirement_type,requirement_body = slot
     param = {
         'query':query,
@@ -36,85 +40,108 @@ def generate_requirement_extraction_prompt(slot, requirement, query):
         'requirement_desc': requirement_body['desc'],
         'requirement_output_format': requirement_body['format'] if 'format' in requirement_body else 'null'
     }
-    return prompt_generator.generate_prompt(REQUIREMENT_EXTRACTION_PROMPT, param)
+    return prompt_generator.generate_prompt(REQUIREMENT_EXTRACTION_PROMPT_POS if is_positive else REQUIREMENT_EXTRACTION_PROMPT_NEG, param)
 
-def llm_extraction(llm, slot, requirement, history):
-    prompt = generate_requirement_extraction_prompt(slot, requirement, history[-1][0])
+def llm_extraction(llm, slot, requirement, is_positive, history):
+    prompt = generate_requirement_extraction_prompt(slot, requirement, is_positive, history[-1][0])
     answer = async_run(run_llm(llm= llm, prompt = prompt, history=history))
     parsed = json.loads(answer[0].history[-1][1])
-    if 'explicitly metioned in the query or chat history' in parsed and parsed['explicitly metioned in the query or chat history']:
-        if 'extracted value' in parsed:
-            return parsed['extracted value']
+    if 'explicitly metioned in the query or chat history' in parsed and parsed['explicitly metioned in the query or chat history'] == 'true':
+        if 'match value extraction rule' in parsed and parsed['match value extraction rule'] == 'true':
+            if 'extracted value' in parsed:
+                return parsed
     return None
     
 
 travel_type = {
+    "name":"travel type",
     "desc":"The type of the travel. Examples: \"Solo\", \"Family\", \"Couple tour\", \"Parent with kids\", \"Group tour\",\"Tour with best friends\" and etc.", 
     'format': "a short phase in Chinese describing the type of the travel. ",
-    "required":True,
+    # "required":True,
     'extraction':llm_extraction
 }
-traveller_type = {
-    "desc":"Indicates the traveller. Could be one of \"Solo\", \"Family\", \"Couple tour\", \"Parent with kids\", \"Group tour\",\"Tour with best friends\" and etc.", 
-    "required":True,
-}
+
 days = {
+    "name":"days",
     "desc":"The number of days that the whole travel will last. ",
     'format': "a number representing the number of days. For example: \"2\",\"3\",\"4\",\"5\",\"6\", \"7\" and etc.",
     'validation':str.isnumeric,
     'extraction':llm_extraction
 }
 travel_date = {
+    "name": "travel date",
     "desc":"The date that the travel take place. Note that the provided **Today date** can not be used as the **travel date** directly unless there is explicitly metioned that the travel starts today.",
     'format':"a date sting formatted as YYYYMMDD. For example: \"20231203\" representing Dec 03, 2023.",
-    "required":True,
+    # "required":True,
     'extraction':llm_extraction,
 }
 event = {
+    "name": "holiday or event",
     "desc":"Is there a holiday or event during the travel? Like \"National day\", \"Laybor day\",\"Childrens's day\" and ect.",
 }
+
 itinerary = {
-    "desc":"The general requirements regarding the travel.",
+    "name": "itinerary",
+    "desc":"The general requirements regarding the whole the travel.",
+    'format':"a short phase describing requirements regarding the whole travel",
+    'extraction':llm_extraction,
 }
 
 region = {
-    "desc":"A specific administrative region (like a city or a district) where the travel will take place. Note that the region requirement should not be a specific place like attraction or restaurant.",
-    'format': "the name of an administrative region. Should only populate the name of the region, instead of a josn object.",
-    'required':True,
+    "name": "region",
+    "desc":"the requirement for an administrative district or region (but not a city) where the travel will take place. Note that the region requirement should not be a specific place like attraction or restaurant.",
+    'format': "the name of an administrative district or region. Note that a city is not counted as a region. Should only populate the name of the region, instead of a josn object.",
+    # 'required':True,
     'extraction':llm_extraction,
 }
+    
 attraction = {
-    "desc": "A specific place of attraction that the travel should include.",
-    'format': "the name of the attraction in Chinese. ",
+    "name": "attraction",
+    "desc": "the requirement for a place of attraction that the travel should include.",
+    'format': "the requirement for the attractions or the name of a specific attraction in Chinese. ",
     "required":True,
     'extraction':llm_extraction
 }
 eat_or_drink = {
-    "desc": "A specific place of food or drink that the travel should include.",
+    "name": "eat or drink",
+    "desc": "the requirement for a place of food or drink that the travel should include.",
+    'format': "the requirement for the food or drink or the name of a specific place of food or drink in Chinese. ",
+    "required":True,
+    'extraction':llm_extraction
 }
 accommodation = {
-    "desc": "A specific place of accommodation that the travel should include.",
+    "name": "accommodation",
+    "desc": "the requirement for a place of accommodation that the travel should include.",
+    'format': "the requirement for accommodation or the name of a specific place of accommodation in Chinese. ",
+    "required":True,
+    'extraction':llm_extraction
 }
 shopping = {
-    "desc": "A specific place for shopping that the travel should include.",
+    "name": "shopping",
+    "desc": "the requirement for a place for shopping that the travel should include.",
+    'format': "the requirement for shopping or the name of a specific place of shopping in Chinese. ",
 }
 entertainment = {
-    "desc": "A specific place of entertaining that the travel should include.",
+    "name": "entertainment",
+    "desc": "the requirement for a place of entertaining that the travel should include.",
+    'format': "the requirement for entertainment or the name of a specific place of entertaining in Chinese. ",
 }
 
-requirement_types = {
-    "travel type": travel_type,
-    # "traveller": traveller_type,
-    "days": days,
-    "travel date": travel_date,
-    "event": event, 
-    "itinerary": itinerary, 
-    "region": region, 
-    "attraction": attraction, 
-    "eat or drink": eat_or_drink, 
-    "accommodation": accommodation, 
-    "shopping": shopping, 
-    "entertainment": entertainment}
+requirement_type_list = [
+    travel_type,
+    days,
+    travel_date,
+    event,
+    itinerary,
+    region,
+    attraction,
+    eat_or_drink,
+    accommodation,
+    shopping,
+    entertainment,
+]
+
+requirement_types = {v['name']:v for v in requirement_type_list}
 
 check_slot = {
     k:requirement_types[k] for k in requirement_types.keys() if 'required' in requirement_types[k]
@@ -184,7 +211,18 @@ class QueryDecomposer:
                 if requirement_processed:
                         result.append(requirement_processed )
             slots = self.check_slot(result)
-        return result, slots
+            
+        debug_logger.info("提取需求：")
+        for r in result:
+            debug_logger.info(str(r))
+            
+        debug_logger.info("缺失的需求：")
+        for k,s in slots.items():
+            debug_logger.info(k)  
+        
+        merged = self.merge_requirement(result)
+        
+        return merged, slots
 
     def process_requirement(self, requirement, history):
         ret_requirement = dict(requirement)
@@ -192,14 +230,31 @@ class QueryDecomposer:
         if key in requirement_types:
             slot = requirement_types[key]
             extracted = ret_requirement['requirement']
+            confidence = 1
             if 'extraction' in slot:
-                extracted = slot['extraction'](requirement = extracted, slot=(key, slot), history = history, llm = self._llm)
+                extracted = slot['extraction'](requirement = extracted, is_positive = ret_requirement['pos_or_neg'] == 'pos', slot=(key, slot), history = history, llm = self._llm)
                 if extracted is None or extracted == '':
                     return None
+                confidence = float(extracted['confidence'])
+                extracted = extracted['extracted value']
             if 'validation' in slot and (not slot['validation'](extracted)):
                 return None
             ret_requirement['requirement'] = extracted
+            ret_requirement['confidence'] = confidence
         return ret_requirement
 
+    def merge_requirement(self, requirements):
+        merged_types = {}
+        for req in requirements:
+            if req['type'] in merged_types:
+                merged_types[req['type']][req['pos_or_neg']] = req['requirement'] + (('\n' + merged_types[req['type']][req['pos_or_neg']] ) if req['pos_or_neg'] in merged_types[req['type']] else '')
+            else:
+                merged_types[req['type']] = {req['pos_or_neg']: req['requirement']}
+        
+        debug_logger.info("合并请求")
+        for k, merged_type in merged_types.items():
+            debug_logger.info(k + ' : ' + str(merged_type))
+        
+        return merged_types
                 
             

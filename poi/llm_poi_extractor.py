@@ -42,10 +42,10 @@ class LlmPoiExtractor(BasePoiExtractor):
         answer = async_run(async_iter())
         parsed = {}
         if answer and len(answer) > 0:
-            formated = answer[0].llm_output['answer'][27:-7].replace('\\n','').replace('\\\"','\"')
-            # print(answer[0].llm_output['answer'])
-            # print('========================================')
-            # print(formated)
+            formated = answer[0].history[-1][1].replace('```','').replace('json','')
+            print(answer[0].llm_output['answer'])
+            print('========================================')
+            print(formated)
             parsed = json.loads(formated)
         poi_retrieved = self.retrieve_poi(parsed)
                         

@@ -72,7 +72,7 @@ class FaissClient:
                     debug_logger.info(f'merge FAISS kb_id: {kb_id}')
                 except ValueError:
                     raise ValueError(f'遗留数据与新版本不匹配，请删除{os.path.dirname(FAISS_LOCATION)}文件夹（清空所有知识库）后重新启动服务并重新创建知识库')
-        debug_logger.info(f'FAISS load kb_ids: {kb_ids}')
+        # debug_logger.info(f'FAISS load kb_ids: {kb_ids}')
 
 #  filter: Optional[Union[Callable, Dict[str, Any]]] = None,
     async def search_document(self, kb_ids, sources, query, 
@@ -88,10 +88,10 @@ class FaissClient:
         docs_with_score = await self.faiss_client.asimilarity_search_with_score(query, k=top_k, filter=filter,
                                                                                 fetch_k=200)
         
-        # make a hard copy of the searched doc in case the doc is updated
+        # make a hard copy of the searched doc in case the doc will be updated
         docs_with_score = [(Document(str(doc.page_content), metadata=dict(doc.metadata)),score) for doc, score in docs_with_score]
 
-        debug_logger.info(f'FAISS search result number: {len(docs_with_score)}')
+        # debug_logger.info(f'FAISS search result number: {len(docs_with_score)}')
         docs = []
         for doc, score in docs_with_score:
             if score_thread and float(score) > score_thread:
@@ -179,3 +179,4 @@ class FaissClient:
             os.chmod(os.path.dirname(faiss_index_path), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         except ValueError as e:
             debug_logger.warning(f'delete documents not find docs')
+

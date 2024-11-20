@@ -5,6 +5,5 @@ from db.mysql import mysql_client
 
 if __name__ == '__main__':
     db = mysql_client.KnowledgeBaseManager()
-    # rs = db.fuzzy_get_poi_by_name('%天坛%')
     rs = db.get_documents_by_kb_id('desc_poi')
     print(str(rs))

@@ -75,7 +75,7 @@ def get_time(func):
         s_time = time.time()
         res = func(*arg, **kwargs)
         e_time = time.time()
-        debug_logger.info('函数 {} 执行耗时: {} 秒'.format(func.__name__, e_time - s_time))
+        # debug_logger.info('函数 {} 执行耗时: {} 秒'.format(func.__name__, e_time - s_time))
         return res
 
     return inner

@@ -57,7 +57,7 @@ class POIService:
             self._kb_checked = True
 
     
-    def retrieve_poi(self, name, addr = None, sources:list = []):
+    def retrieve_poi_by_name(self, name, addr = None, sources:list = []):
         retrieval_documents = async_run(self._context.faiss_client.search_document(kb_ids=[self._context.config.kb_id_poi_name], 
                                                                                    sources = sources,
                                                                                    query = name, 
@@ -75,6 +75,54 @@ class POIService:
         
         retrieval_documents = sorted(merged.values(), key=lambda x: x.metadata['_score'], reverse=False)
         return retrieval_documents
+    
+    def rescore_poi(self, pois_with_desc:list[dict], desc:str):
+        rerank_score = self._context.local_rerank_backend.get_rerank(desc, [poi_with_desc['desc'] for poi_with_desc in pois_with_desc])
+        for poi_with_desc, score in zip(pois_with_desc, rerank_score):
+            poi_with_desc['_rerank_score'] = score
+        return pois_with_desc
+    
+    def retrieve_poi_by_requirement(self, positive_desc, negative_desc, sources:list = []):
+        retrieval_documents = async_run(self._context.faiss_client.search_document(kb_ids=[self._context.config.kb_id_poi_desc, 
+                                                                                        #    self._context.config.kb_id_poi_name
+                                                                                           ], 
+                                                                                   sources = sources,
+                                                                                   query = positive_desc if positive_desc else negative_desc, 
+                                                                                   top_k = 100, 
+                                                                                   merge=False, 
+                                                                                   score_thread = 10, 
+                                                                                   descending=False))
+        retrieved_pois =    [{
+                                        'desc':doc.page_content, 
+                                        'id':doc.metadata['id'], 
+                                        'name':doc.metadata['name']
+                            } for doc in retrieval_documents]
+        
+        unique_pois = {}
+        for retrieved_poi in retrieved_pois:
+            if not (retrieved_poi['id'] in unique_pois):
+                unique_pois[retrieved_poi['id']] = retrieved_poi
+        unique_pois = unique_pois.values()
+        pos_scores = [0 for i in range(len(unique_pois))]
+        neg_scores = list(pos_scores)
+        if not positive_desc is None:
+            self.rescore_poi(unique_pois, positive_desc)
+            pos_scores = [doc['_rerank_score'] for doc in unique_pois]
+        if not negative_desc is None:
+            self.rescore_poi(unique_pois, negative_desc)
+            neg_scores = [doc['_rerank_score'] for doc in unique_pois]
+            
+        reranked_scores = [ pos_score - neg_score 
+                                for pos_score, neg_score in zip(pos_scores, neg_scores)]
+        
+        for poi, reranked_score in zip(unique_pois, reranked_scores):
+            poi['_rerank_score'] = reranked_score
+
+            
+        reranked_poi = sorted(unique_pois, key=lambda x: x['_rerank_score'], reverse=True)
+        
+        return reranked_poi
+        
 
     # get poi info from mysql
     def get_poi_info(self, id:str):
@@ -119,7 +167,7 @@ class POIService:
         # insert new poi desc in vector store
         kb_id = self._context.config.kb_id_poi_desc
         docs = [Document(page_content = desc, metadata = {'id':poi_id, 'name':poi_name})]
-        self._context.faiss_client.add_document(docs, user_id, kb_id, poi_id, poi_name, source)
+        _ = async_run(self._context.faiss_client.add_document(docs, user_id, kb_id, poi_id, poi_name, source))
 
     def delete_poi_desc(self, poi_id:str):
         self._context.faiss_client.delete_documents(self._context.config.kb_id_poi_desc, [poi_id])

@@ -1,0 +1,42 @@
+## Today date
+```{today_date}```
+
+## Query
+```{query}```
+
+## Negative Requirement
+```{requirement}```
+
+## Task Background
+- **Query** and **Chat History**: come from a dialog between user who is intended to make a travel plan and a travel planer. 
+- **Negative Requirement**: a negative requirement extracted from the **Chat History** and **Query** representing what the user does not want or refuse to include in his/her travel plan.
+
+## Task
+In the context of the **Chat History**, **Query** and **Requirement** given, please do the following task step by step:
+1. Following the rules in **Value extraction**, extract what the user does Not want or refuses from the **Requirement**, **Query** and **Chat History**, then return in the correct format .
+2. Determine whether the content of the **extracted value** is metioned in the **Chat History** or **Query**.
+4. Determine whether the **extracted value** matched the rules defined in **Value extraction**. 
+3. Measure your confidence of the value extraction with a number from 0 to 1.
+
+## Value extraction
+- **{requirement_type}** : {requirement_desc}
+- The value of **{requirement_type}** should be out put as {requirement_output_format}.
+
+### Output Format:
+ Return a dictionary representing an the extracted value, with the following key-value pairs:
+ - **extracted value**: extracted from the **Requirement**, representing what the user does NOT want or refuses, by following the rule and output format described in **Value extraction**. 
+ - **explicitly metioned in the query or chat history**: Indicates whether the **extracted value** is explicitly metioned in the **Chat History** or in the **Query**. It could be one of `true` or `false`. Note that the extracted value uses a positive tongue to represent what the user does not want.
+ - **match value extraction rule**: Indicates whether the content of **extracted value** match the **value extraction** rule . It could be one of `true` or `false`. Note that the extracted value uses a positive tongue to represent what the user does not want.
+ - **confidence**: 0-1, measuring your confidence of extracting the value. You must consider how well the extracted value match the definition in **Value extraction** and does the value extracted metioned in the **Chat History** or **Query**.
+ - Ensure the output can be parsed by json.loads.
+Your output should be a json object in the following format:
+{{
+    "extracted value": "The value extracted in the format described in **Value extraction**",
+    "explicitly metioned in the query or chat history": "True or False",
+    "match value extraction rule": "True or False, indicating whether the extracted value match value extraction rule",
+    "confidence": "The value from 0 to 1 that measures the confidence of the extracted value"
+}}
+
+## Note
+- Note that the **extracted value** should only extract the positive expression of the **Negative Requirement** if it is in negative tongue. Example "Do not want spicy food" should extract "spicy food" instead of "do not want spicy food".
+- Note that the extracted value uses a positive tongue to represent what the user does not want.  

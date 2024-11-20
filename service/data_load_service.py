@@ -28,10 +28,6 @@ class DataLoadService:
                 self._context.mysql_client.update_loading_status(loader.id, status='red', reason=error_info)
                 failed_list.append(loader)
                 continue
-            # if docs is None or len(docs) == 0:
-            #     self._context.mysql_client.update_loading_status(loader.id, status='red', reason='上传文件内容为空，请检查文件内容')
-            #     debug_logger.info(f'上传文件内容为空，请检查文件内容')
-            #     continue
             self._context.mysql_client.update_loading_status(loader.id, status='green', reason=" ")
             success_list.append(loader)
         debug_logger.info(

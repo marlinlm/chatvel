@@ -2,11 +2,13 @@ import os
 from os.path import dirname
 import sys
 
+
 sys.path.append(dirname(dirname(__file__)))
-from loader.xhs_loader import XhsLoader
+from service.travel_qa_service import TravelQaService
+# from loader.xhs_loader import XhsLoader
+# from poi.poi_loader import OSMPoiDatasetLoader
+# from service.data_load_service import DataLoadService
 from config.dataset_config import POI_DATASET_DIR_OSM_BEIJING, POI_DATASET_NAME_OSM_BEIJING, XHS_DATASET_DIR
-from poi.poi_loader import OSMPoiDatasetLoader
-from service.data_load_service import DataLoadService
 from service.service_context import ServiceContext
 from arguments import parse_arg
 
@@ -37,26 +39,23 @@ from query.query_decompose import QueryDecomposer
 #                 url=link,
 #                 headers=XHS_HEADERS)
 
-def get_xhs_files(file_dir:str):
-    loaders = []
-    for file_name in os.listdir(file_dir):
-        if file_name.endswith('.xhs'):
-            path = os.path.join(XHS_DATASET_DIR, file_name)
-            xhs_loader = XhsLoader(context = context, file_path=path)
-            loaders.append(xhs_loader)
-    return loaders
+# def get_xhs_files(file_dir:str):
+#     loaders = []
+#     for file_name in os.listdir(file_dir):
+#         if file_name.endswith('.xhs'):
+#             path = os.path.join(XHS_DATASET_DIR, file_name)
+#             xhs_loader = XhsLoader(context = context, file_path=path)
+#             loaders.append(xhs_loader)
+#     return loaders
 
 if __name__ == "__main__":
     args = parse_arg()
     context = ServiceContext()
     context.init_cfg(args)
     
-    # qd = QueryDecomposer(llm = context.llm)
-    # query = '明天去海淀，国庆节找个老师补习一下'
-    # requirements,slots = qd.decompose_query(query)
-    # print('//////////////////////////////////')
-    # print(str(requirements))
-    # print(str(slots))
+    qa = TravelQaService(context = context)
+    query = '游玩北京的园林，前门大街，体验豆汁等北京传统美食，北京旅游，不要太拥挤'
+    pois = qa.qa(query)
     
     
     

@@ -147,7 +147,7 @@ class OpenAILLM(BaseAnswer, ABC):
                 answer = pair[1]
                 messages.append({"role": "assistant", "content": answer})
         messages.append({"role": "system", "content": prompt})
-        debug_logger.info(messages)
+        # debug_logger.info(messages)
 
         try:
             if streaming:
@@ -160,7 +160,7 @@ class OpenAILLM(BaseAnswer, ABC):
                     top_p=self.top_p,
                     stop=[self.stop_words] if self.stop_words is not None else None,
                 )
-                debug_logger.info(f"OPENAI RES: {response}")
+                # debug_logger.info(f"OPENAI RES: {response}")
                 for event in response:
                     if not isinstance(event, dict):
                         event = event.model_dump()
@@ -168,7 +168,7 @@ class OpenAILLM(BaseAnswer, ABC):
                     if isinstance(event['choices'], List) and len(event['choices']) > 0 :
                         event_text = event["choices"][0]['delta']['content']
                         if isinstance(event_text, str) and event_text != "":
-                            debug_logger.info(f"[debug] event_text = [{event_text}]")
+                            # debug_logger.info(f"[debug] event_text = [{event_text}]")
                             delta = {'answer': event_text}
                             yield "data: " + json.dumps(delta, ensure_ascii=False)
 
@@ -183,7 +183,7 @@ class OpenAILLM(BaseAnswer, ABC):
                     stop=[self.stop_words] if self.stop_words is not None else None,
                 )
                 
-                debug_logger.info(f"[debug] response.choices = [{response.choices}]")
+                # debug_logger.info(f"[debug] response.choices = [{response.choices}]")
                 event_text = response.choices[0].message.content if response.choices else ""
                 delta = {'answer': event_text}
                 yield "data: " + json.dumps(delta, ensure_ascii=False)
@@ -204,10 +204,10 @@ class OpenAILLM(BaseAnswer, ABC):
         if history is None or len(history) == 0:
             history = [[]]
             
-        debug_logger.info(f"history_len: {self.history_len}")
-        debug_logger.info(f"prompt: {prompt}")
-        debug_logger.info(f"prompt tokens: {self.num_tokens_from_messages([{'content': prompt}])}")
-        debug_logger.info(f"streaming: {streaming}")
+        # debug_logger.info(f"history_len: {self.history_len}")
+        # debug_logger.info(f"prompt: {prompt}")
+        # debug_logger.info(f"prompt tokens: {self.num_tokens_from_messages([{'content': prompt}])}")
+        # debug_logger.info(f"streaming: {streaming}")
                 
         response = self._call(prompt, history[:-1], streaming)
         complete_answer = ""

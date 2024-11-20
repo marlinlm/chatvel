@@ -60,7 +60,7 @@ class XhsLoader(ChatvelLoader):
         self._poi_service = POIService(context = context)
         
         from poi.llm_poi_extractor import LlmPoiExtractor
-        self._poi_extractor = LlmPoiExtractor(context = context, poi_retriever = self._poi_service.retrieve_poi, save_poi_extraction = False, poi_extraction_save_dir = self._poi_extract_dir)
+        self._poi_extractor = LlmPoiExtractor(context = context, poi_retriever = self._poi_service.retrieve_poi_by_name, save_poi_extraction = False, poi_extraction_save_dir = self._poi_extract_dir)
         # self.poi_extractor = PosPoiExtractor(poi_retriever = self.poi_retriever, save_poi_extraction = True, poi_extraction_save_dir = self.poi_extract_dir)
         
         os.makedirs(self._poi_extract_dir, exist_ok=True)
@@ -78,11 +78,25 @@ class XhsLoader(ChatvelLoader):
         if content_json['code'] == 0 and 'items' in content_json['data'] and len(content_json['data']['items']) > 0:
             for item in tqdm(content_json['data']['items']):
                 id = item['id']
+                xsec_token = item['xsec_token']
                 if('note_card' in item):
-                    url = XHS_PREFIX + id
-                    response = requests.request(url=url,method='get',headers=self._headers)
-                    if response.ok:
-                        yield (id, response.text)
+                    url = XHS_PREFIX + id + '?xsec_token=' + xsec_token + '&xsec_source=pc_feed'
+                    note = None
+                    retry = 0
+                    raw = None
+                    while note is None and retry < 3:
+                        retry = retry + 1
+                        response = requests.request(url=url,method='get',headers=self._headers)
+                        if response.ok:
+                            raw = response.text
+                            note = self.parse_note(id, raw)
+                            if note:
+                                yield (id, raw, note)
+                                break
+                                
+                            time.sleep(random.randint(1,3))
+                    if note is None:
+                        yield (id, raw, note)
                         
                 time.sleep(random.randint(1,6))
 
@@ -91,13 +105,13 @@ class XhsLoader(ChatvelLoader):
         return[self.save_raw, self.save_note]
 
     def save_raw(self, raw_text_with_id) -> Iterator[Document]:
-        note_id, raw_text = raw_text_with_id
-        with open(os.path.join(self._raw_dir, note_id + ".xhs.xml"),'w') as f:
-            f.write(raw_text)
+        note_id, raw_text, note = raw_text_with_id
+        if not raw_text is None:
+            with open(os.path.join(self._raw_dir, note_id + ".xhs.xml"),'w') as f:
+                f.write(raw_text)
 
     def save_note(self, raw_text_with_id) -> Iterator[Document]:
-        note_id, raw_text = raw_text_with_id
-        note = self.parse_note(note_id, raw_text)
+        note_id, raw_text, note = raw_text_with_id
         if note:
             pois, poi_retrieved = self._poi_extractor.extract_poi(  text = note['desc'], 
                                                                     title = note['title'],
@@ -197,7 +211,7 @@ class XhsLoader(ChatvelLoader):
         retrieved_pois = note['retrieved_pois']
         
         for poi_name in pois.keys():
-            desc = None if pois[poi_name]['desc'] == 'null' else pois[poi_name]['desc'] 
+            desc = None if pois[poi_name]['desc'] == 'null' else (poi_name + ' : ' + pois[poi_name]['desc'] )
             addr = None if pois[poi_name]['address'] == 'null' else pois[poi_name]['address']
             
             if poi_name in retrieved_pois:
@@ -238,7 +252,7 @@ class XhsLoader(ChatvelLoader):
         if desc_old is None or len(desc_old) == 0:
             return desc_new
         
-        desc = '\n'.join([desc_old, desc_new])
+        desc = '\n'.join([desc_new, desc_old])
         prompt = generate_desc_merge_prompt(desc)
         async def async_iter():
             results = []
@@ -251,9 +265,7 @@ class XhsLoader(ChatvelLoader):
         merged = None
         answer = async_run(async_iter())
         if answer and len(answer) > 0:
-            raw_answer = answer[0].llm_output['answer'][6:]
-            parsed = json.loads(raw_answer)
-            merged = parsed['answer']
+            merged = answer[0].history[-1][1].replace('```','').replace('json','')
         if merged is None or len(merged) == 0:
             merged = desc
             

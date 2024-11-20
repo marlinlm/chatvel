@@ -4,12 +4,16 @@
 ## Query
 ```{query}```
 
-## Requirement
+## Positive Requirement
 ```{requirement}```
+
+## Task Background
+- **Query** and **Chat History**: come from a dialog between user who is intended to make a travel plan and a travel planer. 
+- **Positive Requirement**: a positive requirement extracted from the **Chat History** and **Query** representing what the user want in his/her travel plan.
 
 ## Task
 In the context of the **Chat History**, **Query** and **Requirement** given, please do the following task step by step:
-1. Following the rules in **Value extraction**, extract value from the **Requirement** and **Query**, then return in the correct format .
+1. Following the rules in **Value extraction**, extract what the user want from the **Requirement**, **Query** and **Chat History**, then return in the correct format .
 2. Determine whether the content of the **extracted value** is metioned in the **Chat History** or **Query**.
 4. Determine whether the **extracted value** matched the rules defined in **Value extraction**. 
 3. Measure your confidence of the value extraction with a number from 0 to 1.
@@ -20,7 +24,7 @@ In the context of the **Chat History**, **Query** and **Requirement** given, ple
 
 ### Output Format:
  Return a dictionary representing an the extracted value, with the following key-value pairs:
- - **extracted value**: the value extracted from the **Requirement** following the rule and output format described in **Value extraction**.
+ - **extracted value**: extracted from the **Requirement**, representing what the user want, by following the rule and output format described in **Value extraction**.
  - **explicitly metioned in the query or chat history**: Indicates whether the **extracted value** is explicitly metioned in the **Chat History** or in the **Query**. It could be one of `true` or `false`.
  - **match value extraction rule**: Indicates whether the content of **extracted value** match the **value extraction** rule . It could be one of `true` or `false`.
  - **confidence**: 0-1, measuring your confidence of extracting the value. You must consider how well the extracted value match the definition in **Value extraction** and does the value extracted metioned in the **Chat History** or **Query**.
